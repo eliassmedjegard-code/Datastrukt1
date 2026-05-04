@@ -21,6 +21,7 @@ private:
     std::vector<std::vector<weight_t>> matrix;  // Granne-matris med vikter
     meta_t meta;                                // Beskrivning per nod
     std::set<node_id_t> existing_nodes;         // Alla nod-id som faktiskt finns
+    edge_list_t raw_edges;                      // Original-kantlistan (för felsökning)
 
 public:
     // Bygger grafen från det parse_file gav oss
@@ -54,6 +55,11 @@ public:
     // Om ingen väg finns returneras (oändlighet, tom lista).
     std::pair<weight_t, std::vector<node_id_t>>
         dijkstra(node_id_t start, node_id_t end) const;
+
+    // Letar efter "bekymmer" i grafen: riktade kanter som saknar
+    // sin motsatsriktning. T.ex. om "19 -> 3" finns men "3 -> 19" saknas
+    // hamnar kanten 19 -> 3 i listan. Tom lista = inga bekymmer.
+    std::vector<edge> asymmetric_edges() const;
 };
 
 #endif //DOA_LABB1_GRAPH_H

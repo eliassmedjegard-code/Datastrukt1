@@ -51,8 +51,9 @@ static void answer_question(const Graph& g,
 }
 
 int main(int argc, char** argv) {
-    // Indata-fil. Default är "input.txt", men man kan ange annan via kommandorad.
-    std::string filename = "input.txt";
+    // Indata-fil. Default är "export.txt" (kursens datafil).
+    // Annan fil kan anges som argument: ./labb1 <filnamn>
+    std::string filename = "export.txt";
     if (argc > 1) filename = argv[1];
 
     std::cout << "Läser indata från: " << filename << "\n";
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
     std::cout << "Antal noder i grafen: " << g.nodes().size() << "\n";
 
     // ----- Sammanhängande-test med DFS och BFS -----
-    // Vi väljer ett startnod-id som finns i grafen
+    // Vi väljer första nod-id som finns i grafen som startpunkt
     node_id_t start = -1;
     for (node_id_t id : g.nodes()) { start = id; break; }
     if (start == -1) {
@@ -82,25 +83,45 @@ int main(int argc, char** argv) {
               << (bfs ? "SAMMANHÄNGANDE" : "INTE sammanhängande") << "\n";
 
     if (!dfs || !bfs) {
-        // Rapportera bekymmer och föreslå åtgärd
         auto bad = g.unreachable_from(start);
-        std::cout << "\nBekymmer i grafen! Följande noder kan inte nås"
-                  << " från startnoden \"" << g.get_node_name(start) << "\":\n";
+        std::cout << "\nFöljande noder kan inte nås från \""
+                  << g.get_node_name(start) << "\":\n";
         for (node_id_t id : bad) {
             std::cout << "  Nod " << id << ": " << g.get_node_name(id) << "\n";
         }
-        std::cout << "\nFörslag på åtgärd:\n"
-                  << "  Lägg till en kant från en nåbar nod till någon av\n"
-                  << "  noderna ovan. Exempel-format för indatafilen:\n"
-                  << "      <nod1> <nod2> <vikt> <beskrivning>\n"
-                  << "  Alternativt: kontrollera att indatafilen inte saknar rader.\n";
+    }
+
+    // ----- Asymmetri-kontroll -----
+    // Indatafilens header säger att kanterna är riktade. För att kunna
+    // promenera åt båda håll måste varje kant ha en motsvarande omvänd kant.
+    auto asym = g.asymmetric_edges();
+    if (!asym.empty()) {
+        std::cout << "\n--- Bekymmer i grafen ---\n";
+        std::cout << "Följande riktade kanter saknar sin motsatsriktning:\n";
+        for (const auto& e : asym) {
+            std::cout << "  " << e.n1 << " -> " << e.n2
+                      << " (vikt " << e.weight << ")"
+                      << "  [" << g.get_node_name(e.n1) << " -> "
+                      << g.get_node_name(e.n2) << "]\n";
+        }
+        std::cout << "\nFörslag på åtgärd: lägg till motsvarande omvända rader,\n"
+                  << "till exempel:\n";
+        for (const auto& e : asym) {
+            std::cout << "  " << e.n2 << " " << e.n1 << " " << e.weight
+                      << e.description << "\n";
+        }
+        std::cout << "\nMatrisen i den här implementationen behandlar redan\n"
+                  << "kanter symmetriskt, så Dijkstra fungerar trots felet.\n";
+    } else {
+        std::cout << "\n(Inga asymmetriska kanter funna i indatat.)\n";
     }
 
     // ----- Besvara labbens tre frågor med Dijkstra -----
+    // Nodnamnen är hämtade direkt ur datafilen.
     std::cout << "\n--- Dijkstras algoritm: kortaste vägar ---\n";
-    answer_question(g, "Nackstavägen",  "Förrådet");
-    answer_question(g, "L319",          "D025");
-    answer_question(g, "Universitetet", "Bite Line Västra");
+    answer_question(g, "Nackstavägen Axvägen 1",       "Förrådet");
+    answer_question(g, "L319",                          "D025");
+    answer_question(g, "Storgatan Rondell Universitetet", "Bite Line West");
 
     return 0;
 }

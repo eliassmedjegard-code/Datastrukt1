@@ -20,6 +20,7 @@ static std::string trim(const std::string& s) {
 Graph::Graph(const adjacency_list_t& adj_list) {
     meta = adj_list.first;
     const edge_list_t& edges = adj_list.second;
+    raw_edges = edges; // Spara original för senare felsökning
 
     // Steg 1: hitta alla nod-id som förekommer i meta eller i kanter,
     // och samtidigt största id för att veta hur stor matrisen ska bli.
@@ -198,4 +199,25 @@ Graph::dijkstra(node_id_t start, node_id_t end) const {
     }
     std::reverse(path.begin(), path.end());
     return {dist[end], path};
+}
+
+// ------------ Asymmetri-kontroll ------------
+// Indatat är specificerat som riktade kanter. Om grafen ska kunna gås
+// åt båda håll måste varje kant ha en motsvarande omvänd kant.
+// Funktionen returnerar de kanter som saknar sin motsats.
+std::vector<edge> Graph::asymmetric_edges() const {
+    // Lägg in alla riktade kanter (n1 -> n2) i en uppsättning för O(1)-uppslag
+    std::set<std::pair<node_id_t, node_id_t>> directed;
+    for (const auto& e : raw_edges) {
+        directed.insert({e.n1, e.n2});
+    }
+
+    // För varje kant: kolla om motsatsen (n2 -> n1) också finns
+    std::vector<edge> result;
+    for (const auto& e : raw_edges) {
+        if (directed.find({e.n2, e.n1}) == directed.end()) {
+            result.push_back(e);
+        }
+    }
+    return result;
 }

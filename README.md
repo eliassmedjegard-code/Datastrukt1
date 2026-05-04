@@ -5,99 +5,138 @@ algoritm. Grafen representeras som en granne-matris (adjacency matrix).
 
 ## Filer
 
-| Fil          | Innehåll                                         |
-| ------------ | ------------------------------------------------ |
-| `reader.h/.cpp` | Inläsning av indatafilen (kommentarer, M-rader, kant-rader) |
-| `graph.h/.cpp`  | Grafklass med matris, DFS, BFS och Dijkstra |
-| `main.cpp`      | Drivrutin som svarar på labbens frågor      |
-| `input.txt`     | Exempeldata för labben                       |
-| `input_broken.txt` | Exempeldata med en isolerad nod (för demo) |
-| `Makefile`      | Bygg-skript                                  |
+| Fil               | Innehåll                                              |
+| ----------------- | ----------------------------------------------------- |
+| `reader.h/.cpp`   | Inläsning av indatafilen (oförändrad från labbens exempel) |
+| `graph.h/.cpp`    | Grafklass med matris, DFS, BFS, Dijkstra och bekymmer-detektor |
+| `main.cpp`        | Drivrutin som svarar på labbens frågor                |
+| `export.txt`      | Kursens datafil (Sundsvall västra)                    |
+| `input.txt`       | Liten testfil med tio noder                           |
+| `input_broken.txt`| Testfil med en isolerad nod (för demo)                |
+| `Makefile`        | Bygg-skript                                           |
 
 ## Bygga och köra
 
 ```bash
 make
-./labb1                  # läser input.txt
-./labb1 input_broken.txt # läser annan fil
+./labb1                  # läser export.txt (default)
+./labb1 input.txt        # läser annan fil
 ```
-
-## Indataformat
-
-```
-# kommentar
-M <nod-id> <namn>
-<nod1> <nod2> <vikt> <beskrivning>
-```
-
-Reader.cpp förstår tre olika rader: kommentarer, meta (M) och kanter.
-Den medföljande readern hanterar inte tomma rader, så håll filen
-kompakt utan blanka rader mellan posterna.
 
 ## Algoritmer
 
-### DFS (Depth-First Search)
-Iterativ implementation med `std::stack`. Vi börjar i startnoden,
-markerar den besökt, och pushar alla obesökta grannar på stacken.
-Upprepa tills stacken är tom. Om någon nod inte besöktes är grafen
-inte sammanhängande.
+**DFS** är iterativt skriven med `std::stack`. Vi börjar i startnoden,
+markerar den besökt och pushar alla obesökta grannar på stacken.
 
-### BFS (Breadth-First Search)
-Som DFS men med `std::queue` istället. Det innebär att noder besöks
-i nivå-ordning från startnoden. Samma test för sammanhängande.
+**BFS** är samma sak fast med `std::queue`. Det innebär att noderna
+besöks i nivå-ordning från startnoden.
 
-### Dijkstras algoritm
-Klassisk O(V²) version. Sätt avstånd[start] = 0 och alla andra till
-oändligheten. Upprepa: ta den obesökta nod med minst avstånd, markera
-besökt, och slappa kanter till alla grannar. När mål-noden är besökt
-är vi klara. Vägen byggs upp genom att gå bakåt via en `prev`-tabell.
+**Dijkstra** är skriven i den enkla O(V²)-varianten: sätt
+`dist[start] = 0`, alla andra till oändligheten. Upprepa: hitta den
+obesökta nod med minst avstånd, markera besökt, slappa kanter till
+alla grannar. Vägen byggs upp genom att gå bakåt från målet via en
+`prev`-tabell.
 
-## Är grafen sammanhängande?
+## Bekymmer i grafen
 
-Med exempeldatan i `input.txt` säger både DFS och BFS att grafen är
-**sammanhängande**. Båda algoritmerna ger samma svar (vilket de ska -
-de utforskar samma uppsättning nåbara noder, bara i olika ordning).
-
-### Hur rättar man till bekymmer?
-
-Om DFS/BFS hittar att grafen INTE är sammanhängande skriver programmet
-ut alla noder som inte gick att nå från startnoden, t.ex.:
+Indatafilens header säger `Directional edges: 115` - ett **udda** tal.
+Eftersom de flesta kanter ligger som "fram + tillbaka"-par är det en
+indikation på att exakt en kant saknar sin motsats. Programmet
+hittar den automatiskt:
 
 ```
-Bekymmer i grafen! Följande noder kan inte nås från startnoden "Universitetet":
-  Nod 4: Förrådet
+Följande riktade kanter saknar sin motsatsriktning:
+  19 -> 3 (vikt 92.03)  [Bite Line West -> Genväg 1]
 ```
 
-För att laga grafen lägger man till minst en kant från en nåbar nod
-till en av de isolerade noderna. Exempel:
+Det innebär att man kan gå **från** Bite Line West **till** Genväg 1,
+men inte tvärtom. Alla andra kanter i filen finns i båda riktningar.
+
+**Åtgärd:** lägg till motsvarande omvända rad i datafilen:
 
 ```
-0 4 200 Universitetet -> Förrådet
+3 19 92.03 [Stängd pizzeria]
 ```
 
-Det går också att kontrollera indatafilen efter saknade rader eller
-felstavade nod-id.
+Vår grafmatris symmetriserar redan kanterna när den byggs (vi sätter
+både `matrix[a][b]` och `matrix[b][a]`), så Dijkstra fungerar trots
+felet. DFS och BFS rapporterar därmed att grafen är **sammanhängande**
+(vilket den blir när asymmetrin behandlas som ett dubbelriktat kanten).
 
 ## Svar på labbens frågor
 
-Svar baserade på exempeldatan i `input.txt`:
+Nodnamnen i frågorna matchas mot de namn som faktiskt finns i `export.txt`:
 
-### Nackstavägen → Förrådet
-- **Total väglängd: 250**
-- Promenad: Nackstavägen → Förrådet (en direkt kant)
+| Frågans formulering | Nod i datafilen           |
+| ------------------- | ------------------------- |
+| Nackstavägen        | `Nackstavägen Axvägen 1` (id 24) |
+| Förrådet            | `Förrådet` (id 37)        |
+| L319                | `L319` (id 46)            |
+| D025                | `D025` (id 47)            |
+| Universitetet       | `Storgatan Rondell Universitetet` (id 20) |
+| Bite Line Västra    | `Bite Line West` (id 19)  |
 
-### L319 → D025
-- **Total väglängd: 115**
-- Promenad: L319 → L-huset → D-huset → D025
-- Vi går först ut ur L319 till L-husets korridor (30), sedan över
-  förbindelsegången till D-huset (60), och slutligen in i D025 (25).
+### 1. Nackstavägen → Förrådet
 
-### Universitetet → Bite Line Västra
-- **Total väglängd: 150**
-- Promenad: Universitetet → Bite Line Västra (direkt kant)
-- Notera: vägen via Studenttorget (50 + 120 = 170) är längre, så
-  Dijkstra väljer den direkta kanten.
+**Total väglängd: 1726,18 m**
 
-> **OBS:** Värdena ovan kommer från exempeldatan i `input.txt`. Om
-> du har den riktiga indatafilen från kursen, kör då `./labb1 <filnamn>`
-> så räknar programmet ut korrekta svar för den datan istället.
+```
+Nackstavägen Axvägen 1
+ -> Bergsgatan Nackstavägen
+ -> Bultgatan 21
+ -> Bultgatan 19
+ -> Genväg 1
+ -> Genväg 2
+ -> Järnvägsövergång
+ -> Genväg Åkanten
+ -> Åkanten1
+ -> Åkanten infart parkering
+ -> Sidsjövägen campus 1
+ -> Grönborgsgatan Väderkvarnsbacken
+ -> Förrådet
+```
+
+Promenaden går baklänges längs Nackstavägen, in på Bultgatan, via
+genvägen genom Åkanten ner till Sidsjövägen och upp till Förrådet.
+
+### 2. L319 → D025
+
+**Total väglängd: 479,65 m**
+
+```
+L319
+ -> Entré Hus L            (0,00 m, trapphuset/hissen)
+ -> Rondell Campus         (69,72 m)
+ -> Storgatan Rondell Universitetet  (89,24 m)
+ -> Sidsjövägen campus 1   (69,72 m)
+ -> Grönborgsgatan Väderkvarnsbacken  (156,16 m)
+ -> D025                   (94,81 m)
+```
+
+Notera att kanten `L319 -> Entré Hus L` har vikt 0 (det är
+samma trapphus). Vägen går alltså ut ur L-huset, runt rondellen vid
+Universitetet, ner längs Sidsjövägen och in i D-huset.
+
+### 3. Universitetet → Bite Line Västra
+
+**Total väglängd: 1207,50 m**
+
+```
+Storgatan Rondell Universitetet
+ -> Sidsjövägen campus 1
+ -> Åkanten infart parkering
+ -> Åkanten1
+ -> Genväg Åkanten
+ -> Järnvägsövergång
+ -> Genväg 2
+ -> Genväg 1
+ -> Bite Line West
+```
+
+Vägen går från rondellen vid Universitetet, ner längs Sidsjövägen och
+sedan via Åkanten-genvägen och järnvägsövergången till Bite Line West.
+
+> Den kortaste vägen kräver att asymmetrin på kanten `19 -> 3` är
+> åtgärdad. Vår matris symmetriserar automatiskt så Dijkstra hittar
+> vägen ändå - men den underliggande kanten i datafilen behöver kompletteras
+> som beskrivet ovan.

@@ -1,0 +1,39 @@
+# Exempeldata för labb 1 - Grafer
+# Format:
+#   # ...kommentar...
+#   M <nod-id> <namn>
+#   <nod1> <nod2> <vikt> <beskrivning>
+# Vikten representerar avstånd i meter. Grafen är oriktad.
+# Detta är ett exempel som täcker frågorna i labben.
+# --- Noddefinitioner ---
+M 0 Universitetet
+M 1 Bite Line Västra
+M 2 Bite Line Östra
+M 3 L-huset
+M 4 D-huset
+M 5 L319
+M 6 D025
+M 7 Nackstavägen
+M 8 Förrådet
+M 9 Centrum
+M 10 Korsning Nacksta
+M 11 Bussterminalen
+M 12 Studenttorget
+# --- Kanter ---
+0 3 80 Universitetet -> L-huset
+0 4 100 Universitetet -> D-huset
+0 1 150 Universitetet -> Bite Line Västra
+0 2 200 Universitetet -> Bite Line Östra
+0 12 50 Universitetet -> Studenttorget
+3 5 30 L-huset -> L319
+4 6 25 D-huset -> D025
+3 4 60 L-huset -> D-huset
+12 1 120 Studenttorget -> Bite Line Västra
+12 2 130 Studenttorget -> Bite Line Östra
+1 11 700 Bite Line Västra -> Bussterminalen
+2 11 750 Bite Line Östra -> Bussterminalen
+11 9 400 Bussterminalen -> Centrum
+9 10 1500 Centrum -> Korsning Nacksta
+10 7 300 Korsning Nacksta -> Nackstavägen
+7 8 250 Nackstavägen -> Förrådet
+1 10 1700 Bite Line Västra -> Korsning Nacksta

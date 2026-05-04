@@ -1,0 +1,11 @@
+# Exempel på indata med bekymmer:
+# Nod "Förrådet" är isolerad - inga kanter leder dit.
+# Detta får DFS/BFS att rapportera grafen som icke sammanhängande.
+M 0 Universitetet
+M 1 Bite Line Västra
+M 2 L-huset
+M 3 L319
+M 4 Förrådet
+0 1 150 Universitetet -> Bite Line Västra
+0 2 80 Universitetet -> L-huset
+2 3 30 L-huset -> L319
